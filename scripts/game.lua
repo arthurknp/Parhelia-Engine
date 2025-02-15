@@ -5,13 +5,14 @@ Game = {}
 local texture
 local draw_msg = true
 
+local pos = Parhelia.Math.Vec2:new(100, 100)
+
 function Game.load_content()
-    -- carregar a porra das textura
     texture = Parhelia.load_texture("teste.bmp")
 end
 
 function Game.update(dt)
-    -- aqui a buceta da logica da porra do jogo
+    print(pos)
 end
 
 function Game.draw()

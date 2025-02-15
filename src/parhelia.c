@@ -13,11 +13,11 @@
 #include <stdbool.h>
 #include <stdio.h>
 
-#include "io.h"
-
 #include <lua/lauxlib.h>
 #include <lua/lua.h>
 #include <lua/lualib.h>
+
+#include "c-api/io.h"
 
 typedef struct {
     ALLEGRO_DISPLAY* display;
@@ -54,38 +54,44 @@ void game_draw(lua_State* L) {
     }
 }
 
-int main(void) {
+int main(void) {    
     Context tmp_ctx = {0};
     ctx = tmp_ctx;
 
     bool running = true;
+    int retVal = 0;
 
     if (!al_init()) {
         fprintf(stderr, "Erro ao inicializar allegro\n");
-        return 1;
+        retVal = 1;
+        goto cleanup;
     }
 
     if (!al_init_image_addon()) {
         fprintf(stderr, "Erro ao inicializar Allegro Image Addon\n");
-        return 1;
+        retVal = 1;
+        goto cleanup;
     }
 
     ctx.timer = al_create_timer(1 / 60.0);
     if (!ctx.timer) {
         fprintf(stderr, "Erro ao criar o timer\n");
-        return 1;
+        retVal = 1;
+        goto cleanup;
     }
 
     ctx.display = al_create_display(800, 600);
     if (!ctx.display) {
         fprintf(stderr, "Erro ao criar display\n");
-        return 1;
+        retVal = 1;
+        goto cleanup;
     }
 
     ctx.queue = al_create_event_queue();
     if (!ctx.queue) {
         fprintf(stderr, "Erro ai criar event queue\n");
-        return 1;
+        retVal = 1;
+        goto cleanup;
     }
 
     al_register_event_source(ctx.queue, al_get_display_event_source(ctx.display));
@@ -97,10 +103,13 @@ int main(void) {
     lua_State* L = luaL_newstate();
     luaL_openlibs(L);
 
-    ParheliaFile engineLuaFile = parhelia_io_read_file("wrapper/parhelia.lua");
+    File engineLuaFile = parhelia_io_read_file("lua_api/parhelia.lua");
 
     // garantir que não ocorra erros carregando os módulos da engine
-    assert(luaL_dostring(L, engineLuaFile.data) == LUA_OK); 
+    if (luaL_dostring(L, engineLuaFile.data) != LUA_OK) {
+        fprintf(stderr, "%s\n", lua_tostring(L, -1));
+        return 1;
+    }
 
     lua_setglobal(L, "Parhelia");
     
@@ -108,10 +117,8 @@ int main(void) {
     // que o usuário cria, caso a engine não ache esse script, avisa e fecha
     if (luaL_dofile(L, "scripts/game.lua") != LUA_OK) {
         MessageBox(NULL, lua_tostring(L, -1), "Parhelia Engine Error", MB_OK | MB_ICONERROR);
-        al_destroy_display(ctx.display);
-        al_destroy_event_queue(ctx.queue);
-        lua_close(L);
-        return 1;
+        retVal = 1;
+        goto cleanup;
     }
 
     // rodando funções definidas em Lua já
@@ -119,10 +126,6 @@ int main(void) {
 
     al_start_timer(ctx.timer);
     double lastTime = al_get_time();
-
-    // textura de teste
-    ALLEGRO_BITMAP* teste_textura = al_load_bitmap("teste.bmp");
-    assert(teste_textura != NULL);
 
     while (running) {
         ALLEGRO_EVENT event;
@@ -133,6 +136,7 @@ int main(void) {
                     double currentTime = al_get_time();
                     double deltaTime = currentTime - lastTime;
                     lastTime = currentTime;
+                    // lógica do jogo roda em um intervalo fixo e envia o delta time pra função em Lua
                     game_update(L, deltaTime);
                 } break;
 
@@ -140,21 +144,22 @@ int main(void) {
                     running = false;
                 } break;
                     
-                default: {
-                    fprintf(stderr, "Tipo de evento não suportado: %d\n", event.type);
-                } break;
+                default:
+                    break;
             }
         }
 
         al_clear_to_color(al_map_rgb(255, 255, 255));
+        // renderiza sempre que conseguir, sem intervalo
         game_draw(L);
-        al_draw_bitmap(teste_textura, 0.0f, 0.0f, 0);
         al_flip_display();
     }
 
-	al_destroy_display(ctx.display);
-	al_destroy_event_queue(ctx.queue);
-    al_destroy_bitmap(teste_textura);
+cleanup:
+    al_destroy_display(ctx.display);
+    al_destroy_event_queue(ctx.queue);
+    al_destroy_timer(ctx.timer);
     lua_close(L);
-    return 0;
+
+    return retVal;
 }
