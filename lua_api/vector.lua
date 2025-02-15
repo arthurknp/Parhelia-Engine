@@ -1,4 +1,6 @@
 
+-- TODO: Adicionar Vector3
+
 Vector = {}
 
 Vec2 = {}

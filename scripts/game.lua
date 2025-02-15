@@ -2,22 +2,44 @@ local Parhelia = require("Parhelia")
 
 Game = {}
 
-local texture
-local draw_msg = true
+local pos = Parhelia.Math.Vec2:new(0, 0)
+local size = Parhelia.Math.Vec2:new(32, 32)
+local col = Parhelia.Color:new(255, 0, 0, 255)
 
-local pos = Parhelia.Math.Vec2:new(100, 100)
+local speed = 10
+
+local renderer = Parhelia.Renderer:new()
 
 function Game.load_content()
-    texture = Parhelia.load_texture("teste.bmp")
 end
 
 function Game.update(dt)
-    print(pos)
+
+    local move = Parhelia.Math.Vec2:new(0, 0)
+
+    if Parhelia.Input.is_key_pressed(Parhelia.Input.Keys.KEY_W) then
+         move.y = -1
+    end
+    if Parhelia.Input.is_key_pressed(Parhelia.Input.Keys.KEY_S) then
+        move.y = 1
+   end
+   if Parhelia.Input.is_key_pressed(Parhelia.Input.Keys.KEY_A) then
+        move.x = -1
+    end
+    if Parhelia.Input.is_key_pressed(Parhelia.Input.Keys.KEY_D) then
+        move.x = 1
+    end
+
+    move = move:normalize() * speed
+    pos = pos + move
+
 end
 
 function Game.draw()
-    if draw_msg then
-        Parhelia.draw_texture(texture, 100, 100)
-        draw_msg = false
-    end
+    renderer:clear_background(Parhelia.Color:new(255, 255, 255, 255))
+
+    renderer:draw_rect(pos, size, col)
+
+    renderer:swap_buffers()
+
 end

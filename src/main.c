@@ -10,6 +10,8 @@
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_image.h>
 
+#include <allegro5/keycodes.h>
+
 #include <stdbool.h>
 #include <stdio.h>
 
@@ -17,7 +19,11 @@
 #include <lua/lua.h>
 #include <lua/lualib.h>
 
-#include "c-api/io.h"
+#include "allegro5/allegro_primitives.h"
+#include "allegro5/keyboard.h"
+#include "c_api/io.h"
+
+#include "c_api/input.h"
 
 typedef struct {
     ALLEGRO_DISPLAY* display;
@@ -73,6 +79,12 @@ int main(void) {
         goto cleanup;
     }
 
+    if (!al_init_primitives_addon()) {
+        fprintf(stderr, "Erro ao inicializar Allegro Primitives Addon\n");
+        retVal = 1;
+        goto cleanup;
+    }
+
     ctx.timer = al_create_timer(1 / 60.0);
     if (!ctx.timer) {
         fprintf(stderr, "Erro ao criar o timer\n");
@@ -94,8 +106,11 @@ int main(void) {
         goto cleanup;
     }
 
+    al_install_keyboard();
+
     al_register_event_source(ctx.queue, al_get_display_event_source(ctx.display));
     al_register_event_source(ctx.queue, al_get_timer_event_source(ctx.timer));
+    al_register_event_source(ctx.queue, al_get_keyboard_event_source());
 
     al_clear_to_color(al_map_rgb(0, 0, 0));
     al_flip_display();
@@ -104,6 +119,8 @@ int main(void) {
     luaL_openlibs(L);
 
     File engineLuaFile = parhelia_io_read_file("lua_api/parhelia.lua");
+
+    input_init();
 
     // garantir que não ocorra erros carregando os módulos da engine
     if (luaL_dostring(L, engineLuaFile.data) != LUA_OK) {
@@ -132,6 +149,14 @@ int main(void) {
 
         if (al_get_next_event(ctx.queue, &event)) {
             switch (event.type) {
+                case ALLEGRO_EVENT_KEY_DOWN: {
+                    keystate.keys[event.keyboard.keycode] = true;
+                } break;
+
+                case ALLEGRO_EVENT_KEY_UP: {
+                    keystate.keys[event.keyboard.keycode] = false;
+                } break;
+
                 case ALLEGRO_EVENT_TIMER: {
                     double currentTime = al_get_time();
                     double deltaTime = currentTime - lastTime;
@@ -149,10 +174,7 @@ int main(void) {
             }
         }
 
-        al_clear_to_color(al_map_rgb(255, 255, 255));
-        // renderiza sempre que conseguir, sem intervalo
         game_draw(L);
-        al_flip_display();
     }
 
 cleanup:

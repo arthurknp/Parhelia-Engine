@@ -8,6 +8,7 @@
 #define IO_READ_ERROR_GENERAL "Erro lendo arquivo: %s. Errno: %d\n"
 #define IO_READ_ERROR_MEMORY "Memória insuficiente para ler arquivo: %s\n"
 
+// TODO: Creditar de onde eu tirei essa função
 File parhelia_io_read_file(const char* path) {
     File file = {.isValid = false};
 
