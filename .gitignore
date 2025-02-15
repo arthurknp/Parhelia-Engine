@@ -1,5 +1,6 @@
 #custom
 *.def
+tcc-defs/
 
 # Prerequisites
 *.d
