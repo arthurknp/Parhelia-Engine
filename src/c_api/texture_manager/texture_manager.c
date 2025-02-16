@@ -10,6 +10,12 @@
 
 TextureManager globalTextureManager;
 
+static void unload_all_textures(void) {
+    for (int i = 0; i<globalTextureManager.used; i++) {
+        al_destroy_bitmap(globalTextureManager.items[i]);
+    }
+}
+
 void create_global_texture_manager(void){
     globalTextureManager = (TextureManager) {0};
     globalTextureManager.items = malloc(sizeof(ALLEGRO_BITMAP*) * INITIAL_TEXTURE_ARRAY_SIZE);
@@ -21,6 +27,7 @@ void create_global_texture_manager(void){
 }
 
 void destroy_global_texture_manager(void) {
+    unload_all_textures();
     free(globalTextureManager.items);
 }
 
