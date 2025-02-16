@@ -24,4 +24,8 @@ function Renderer:swap_buffers()
     c_draw.swap_buffers()
 end
 
+function Renderer:draw_texture(texture, pos)
+    c_draw.draw_texture(texture, pos)
+end
+
 return Renderer

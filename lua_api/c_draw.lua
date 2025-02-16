@@ -7,13 +7,27 @@ typedef struct {
     uint8_t b;
     uint8_t a;
 } Color;
+typedef int Texture;
 Color parhelia_create_color_from_ints(int r, int g, int b, int a);
 void parhelia_draw_rect(float x, float y, float w, float h, Color col);
 void parhelia_clear_screen(Color col);
 void parhelia_swap_buffers(void);
+Texture parhelia_load_texture(const char* path);
+void parhelia_draw_texture(Texture texture, float x, float y);
 ]]
 
 C_Draw = {}
+
+Texture = {}
+Texture.__index = Texture
+
+function Texture:new(path)
+    local instance = setmetatable({}, self)
+    print(path)
+    instance._handle = ffi.C.parhelia_load_texture(path)
+    return instance
+end
+
 Color = {}
 Color.__index = Color
 
@@ -40,7 +54,11 @@ function C_Draw.swap_buffers()
     ffi.C.parhelia_swap_buffers()
 end
 
+function C_Draw.draw_texture(texture, pos)
+    ffi.C.parhelia_draw_texture(texture._handle, pos.x, pos.y)
+
+end
+
 C_Draw.Color = Color
-
-
+C_Draw.Texture = Texture
 return C_Draw

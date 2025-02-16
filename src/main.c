@@ -24,6 +24,7 @@
 #include "c_api/io.h"
 
 #include "c_api/input.h"
+#include "c_api/texture_manager.h"
 
 typedef struct {
     ALLEGRO_DISPLAY* display;
@@ -32,14 +33,6 @@ typedef struct {
 } Context;
 
 static Context ctx;
-
-void game_load_content(lua_State* L) {
-    lua_getglobal(L, "Game");
-    lua_getfield(L, -1, "load_content");
-    if (lua_isfunction(L, -1)) {
-        lua_pcall(L, 0, 0, 0);
-    }
-}
 
 void game_update(lua_State* L, double deltaTime) {
     lua_getglobal(L, "Game");
@@ -121,6 +114,8 @@ int main(void) {
     File engineLuaFile = parhelia_io_read_file("lua_api/parhelia.lua");
 
     input_init();
+    create_global_texture_manager();
+    parhelia_texture_manager_load_error_texture();
 
     // garantir que não ocorra erros carregando os módulos da engine
     if (luaL_dostring(L, engineLuaFile.data) != LUA_OK) {
@@ -137,10 +132,7 @@ int main(void) {
         retVal = 1;
         goto cleanup;
     }
-
-    // rodando funções definidas em Lua já
-    game_load_content(L);
-
+    
     al_start_timer(ctx.timer);
     double lastTime = al_get_time();
 
@@ -182,6 +174,7 @@ cleanup:
     al_destroy_event_queue(ctx.queue);
     al_destroy_timer(ctx.timer);
     lua_close(L);
+    destroy_global_texture_manager();
 
     return retVal;
 }

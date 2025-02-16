@@ -36,3 +36,13 @@ PARHELIA_EXPORT void parhelia_clear_screen(Color col) {
 PARHELIA_EXPORT void parhelia_swap_buffers(void) {
     al_flip_display();
 }
+
+PARHELIA_EXPORT Texture parhelia_load_texture(const char* path) {
+    return parhelia_texture_manager_load_texture(path);
+}
+
+PARHELIA_EXPORT void parhelia_draw_texture(Texture texture, float x, float y) {
+    if (parhelia_texture_manager_is_texture_valid(texture)) {
+        al_draw_bitmap(globalTextureManager.items[texture], x, y, 0);
+    }
+}

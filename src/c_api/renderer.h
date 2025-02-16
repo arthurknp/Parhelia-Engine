@@ -3,10 +3,10 @@
 
 #define PARHELIA_EXPORT __declspec(dllexport) 
 
-#include "allegro5/bitmap.h"
 #include <limits.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include "texture_manager.h"
 
 typedef struct {
     uint8_t r;
@@ -17,13 +17,12 @@ typedef struct {
 
 PARHELIA_EXPORT Color parhelia_create_color_from_ints(int r, int g, int b, int a);
 
-typedef struct {
-    ALLEGRO_BITMAP* ptr;
-} Texture;
-
 // draw
 PARHELIA_EXPORT void parhelia_clear_screen(Color col);
 PARHELIA_EXPORT void parhelia_draw_rect(float x, float y, float w, float h, Color col);
 PARHELIA_EXPORT void parhelia_swap_buffers(void);
+
+PARHELIA_EXPORT Texture parhelia_load_texture(const char* path);
+PARHELIA_EXPORT void parhelia_draw_texture(Texture texture, float x, float y);
 
 #endif // RENDERER_H

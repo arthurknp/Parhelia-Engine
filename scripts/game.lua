@@ -9,9 +9,7 @@ local col = Parhelia.Color:new(255, 0, 0, 255)
 local speed = 10
 
 local renderer = Parhelia.Renderer:new()
-
-function Game.load_content()
-end
+local texture = Parhelia.Texture:new("res/teste.bmp")
 
 function Game.update(dt)
 
@@ -38,7 +36,7 @@ end
 function Game.draw()
     renderer:clear_background(Parhelia.Color:new(255, 255, 255, 255))
 
-    renderer:draw_rect(pos, size, col)
+    renderer:draw_texture(texture, pos)
 
     renderer:swap_buffers()
 
